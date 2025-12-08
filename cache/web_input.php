@@ -2,36 +2,33 @@
 
 require __DIR__ . '/../src/Runtime.php';
 
-echo "Starting program...";
+<?php
 
-$name = "Imam";
-$age = 16;
+require __DIR__ . '/../src/Runtime.php';
 
-if ($age > 10 && $age < 20) {
-    echo "Teenager";
+$a = 10;
+$b = 20;
+
+echo $a . " + " . $b . " = " . ($a + $b);
+
+if ($a < $b) {
+    echo "a is smaller";
 // UNKNOWN APH LINE: } else {
-    echo "Not a teen";
+    echo "a is NOT smaller";
 // UNKNOWN APH LINE: }
 
-for ($i2836 = 0; $i2836 < 3; $i2836++) {
-echo "Looping APH block!";
-}
+$x = 5;
+$y = 3;
+echo $x + $y;
+echo "\n";
 
-for ($i = 0; $i < 5; $i++) {
-    echo "PHP Loop: " . $i;
+function add($val1, $val2) {
+    return $val1 + $val2;
 // UNKNOWN APH LINE: }
 
-function greet($x) {
-    echo "Hello, " . $x;
-    if ($x == "Imam") {
-        echo "You are the creator of APH!";
-// UNKNOWN APH LINE: }
-// UNKNOWN APH LINE: }
+echo add(7, 8);
 
-$items = ["apple", "banana", "pear"];
-foreach ($items as $item) {
-    echo $item;
-// UNKNOWN APH LINE: }
+echo "Line1" . PHP_EOL . "Line2";
 
-return "Program Finished";
+
 

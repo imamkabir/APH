@@ -1,78 +1,105 @@
 <?php
 
 /**
- * APH v1 — Full Keyword Dictionary (Updated & Stable)
- * ----------------------------------
- * EVERY keyword now uses translator helpers,
- * and APH fully supports strings, variables, function calls, AND logic.
+ * APH v2.7 — Keyword Dictionary (HTML-aware, Expression-aware)
+ * ------------------------------------------------------------
+ * Upgraded for correct handling of:
+ * - HTML inside strings ("<br>")
+ * - PHP_EOL inside DISPLAY
+ * - Expressions: $x + 5, func($y), constant calls, etc.
+ * - Complex echo concatenations
  */
 
 return [
 
     // ----------------------------------------------------------
-    // DISPLAY (print text, variables, or function calls)
+    // DISPLAY — now supports HTML, PHP_EOL, expressions, functions
     // ----------------------------------------------------------
     "DISPLAY" => function($content) {
+
+        // Split on " AND " for multi-part display
         $parts = explode(" AND ", $content);
         $phpParts = [];
 
         foreach ($parts as $p) {
             $p = trim($p);
 
-            // 1) Quoted text → leave as is
+            // 1) Quoted string (HTML allowed)
             if ((str_starts_with($p, '"') && str_ends_with($p, '"')) ||
                 (str_starts_with($p, "'") && str_ends_with($p, "'"))) {
-
                 $phpParts[] = $p;
                 continue;
             }
 
-            // 2) Function call (detect simple function(...) pattern)
-            //    - starts with a letter/underscore, then letters/numbers/underscores, then parentheses
+            // 2) PHP constants (e.g., PHP_EOL)
+            if (preg_match('/^[A-Z_]+$/', $p)) {
+                $phpParts[] = $p;
+                continue;
+            }
+
+            // 3) Function call detection
             if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*\s*\(.*\)$/', $p)) {
-                // use as-is (do NOT add $)
                 $phpParts[] = $p;
                 continue;
             }
 
-            // 3) Raw PHP expression (starts with $ or contains operators) — keep as-is if it starts with $
+            // 4) Raw PHP expression — contains operators
+            if (preg_match('/[\+\-\*\/\.\%\>\<=]/', $p)) {
+                // Example: $i + 1, $x . "<br>"
+                $phpParts[] = $p;
+                continue;
+            }
+
+            // 5) Pure variable
             if (str_starts_with($p, '$')) {
                 $phpParts[] = $p;
                 continue;
             }
 
-            // 4) Fallback: treat as variable via aph_identifier()
+            // 6) Fallback: APH variable → PHP variable
             $phpParts[] = aph_identifier($p);
         }
 
         return "echo " . implode(" . ", $phpParts) . ";";
     },
 
+
     // ----------------------------------------------------------
-    // SET variable TO value
+    // SET — now supports HTML, functions, expressions, constants
     // ----------------------------------------------------------
     "SET" => function($content) {
 
-        // Example: SET age TO 20
         $parts = explode(" TO ", $content);
         $var = trim($parts[0]);
         $value = trim($parts[1] ?? "");
 
-        // Turn "age" → "$age"
+        // Convert var name → PHP variable
         $var = aph_identifier($var);
 
-        // If value is a quoted string or numeric → keep as-is
-        if (is_numeric($value) ||
+        // 1) Numeric
+        if (is_numeric($value)) {
+            // NO CHANGE
+        }
+        // 2) Quoted string
+        else if (
             (str_starts_with($value, '"') && str_ends_with($value, '"')) ||
-            (str_starts_with($value, "'") && str_ends_with($value, "'"))) {
-
-            // nothing to do
+            (str_starts_with($value, "'") && str_ends_with($value, "'"))
+        ) {
+            // NO CHANGE
         }
-        // If value looks like a function call → leave as-is (no $)
+        // 3) PHP constants (PHP_EOL, etc.)
+        else if (preg_match('/^[A-Z_]+$/', $value)) {
+            // NO CHANGE
+        }
+        // 4) Function call
         else if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*\s*\(.*\)$/', $value)) {
-            // keep $value as function call text
+            // NO CHANGE
         }
-        // Otherwise treat as variable
+        // 5) Expression
+        else if (preg_match('/[\+\-\*\/\.\%\>\<=]/', $value)) {
+            // NO CHANGE
+        }
+        // 6) Fallback: variable
         else {
             $value = aph_identifier($value);
         }
@@ -80,19 +107,18 @@ return [
         return "$var = $value;";
     },
 
+
     // ----------------------------------------------------------
     // IF / ELSE IF / ELSE
     // ----------------------------------------------------------
     "IF" => function($content) {
         $condition = str_replace(" THEN", "", trim($content));
-        $condition = aph_translate_condition($condition);
-        return "if ($condition) {";
+        return "if (" . aph_translate_condition($condition) . ") {";
     },
 
     "ELSE IF" => function($content) {
         $condition = str_replace(" THEN", "", trim($content));
-        $condition = aph_translate_condition($condition);
-        return "} elseif ($condition) {";
+        return "} elseif (" . aph_translate_condition($condition) . ") {";
     },
 
     "ELSE" => function() {
@@ -103,12 +129,14 @@ return [
         return "}";
     },
 
+
     // ----------------------------------------------------------
     // LOOPS
     // ----------------------------------------------------------
     "REPEAT" => function($content) {
+        // Example: REPEAT 3 TIMES
         $num = intval(str_replace(" TIMES", "", trim($content)));
-        $i = "i" . rand(1000,9999);
+        $i = "i" . rand(1000, 9999);
         return "for (\$$i = 0; \$$i < $num; \$$i++) {";
     },
 
@@ -116,18 +144,16 @@ return [
         return "}";
     },
 
+
     // ----------------------------------------------------------
     // FUNCTION definition
-    // Example: FUNCTION greet(name)
     // ----------------------------------------------------------
     "FUNCTION" => function($content) {
 
         $content = trim($content);
 
-        // Convert parameters to PHP variables
         if (str_contains($content, "(")) {
 
-            // Split function name and arguments
             $name = trim(substr($content, 0, strpos($content, "(")));
             $args = substr($content, strpos($content, "(") + 1);
             $args = rtrim($args, ")");
@@ -135,16 +161,14 @@ return [
             if ($args === "") {
                 $phpArgs = "";
             } else {
-                $argList = explode(",", $args);
                 $phpArgs = implode(", ", array_map(function($a) {
                     return aph_identifier(trim($a));
-                }, $argList));
+                }, explode(",", $args)));
             }
 
             return "function {$name}($phpArgs) {";
         }
 
-        // Fallback (no params)
         return "function {$content} {";
     },
 
@@ -152,30 +176,35 @@ return [
         return "}";
     },
 
+
     // ----------------------------------------------------------
-    // RETURN
+    // RETURN — expression-safe
     // ----------------------------------------------------------
     "RETURN" => function($content) {
 
         $content = trim($content);
 
-        // If numeric or quoted string, keep as-is
+        // numeric or string
         if (is_numeric($content) ||
             (str_starts_with($content, '"') && str_ends_with($content, '"')) ||
             (str_starts_with($content, "'") && str_ends_with($content, "'"))) {
-            // no change
-        }
-        // If it's a function call, keep as-is
-        else if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*\s*\(.*\)$/', $content)) {
-            // no change
-        }
-        // Otherwise treat as variable
-        else {
-            $content = aph_identifier($content);
+            return "return $content;";
         }
 
-        return "return $content;";
+        // function call
+        if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*\s*\(.*\)$/', $content)) {
+            return "return $content;";
+        }
+
+        // expression
+        if (preg_match('/[\+\-\*\/\.\%\>\<=]/', $content)) {
+            return "return $content;";
+        }
+
+        // variable
+        return "return " . aph_identifier($content) . ";";
     },
+
 
     // ----------------------------------------------------------
     // IMPORT FILE
@@ -185,6 +214,7 @@ return [
         return "require \"$file\";";
     },
 
+
     // ----------------------------------------------------------
     // COMMENT
     // ----------------------------------------------------------
@@ -192,10 +222,10 @@ return [
         return "// " . trim($content);
     },
 
+
     // ----------------------------------------------------------
-    // BOOL CONSTANTS
+    // BOOLEAN CONSTANTS
     // ----------------------------------------------------------
     "TRUE" => function() { return "true"; },
     "FALSE" => function() { return "false"; },
-
 ];

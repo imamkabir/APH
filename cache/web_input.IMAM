@@ -1,42 +1,29 @@
-DISPLAY "Starting program..."
+COMMENT UNKNOWN: <?php
 
-SET name TO "Imam"
+COMMENT UNKNOWN: require __DIR__ . '/../src/Runtime.php';
 
-SET age TO 16
+SET a TO 10
+SET b TO 20
 
-IF age > 10 && age < 20 THEN
+DISPLAY a AND " + " AND b AND " = " AND ($a + $b)
 
-DISPLAY "Teenager"
-ELSE
-
-DISPLAY "Not a teen"
+IF a < b THEN
+    DISPLAY "a is smaller"
+    COMMENT UNKNOWN: } else {
+    DISPLAY "a is NOT smaller"
 END IF
 
-REPEAT 3 TIMES
+SET x TO 5
+SET y TO 3
+DISPLAY x + $y
+DISPLAY "\n"
 
-DISPLAY "Looping APH block!"
-END REPEAT
-
-REPEAT 5 TIMES
-
-DISPLAY "PHP Loop: " . $i
-END REPEAT
-
-FUNCTION greet(x)
-
-DISPLAY "Hello, " . $x
-
-IF x == "Imam" THEN
-
-    DISPLAY "You are the creator of APH!"
-END IF
+FUNCTION add(val1, val2)
+    RETURN val1 + $val2
 END FUNCTION
 
-SET items TO ["apple", "banana", "pear"]
+DISPLAY add(7, 8)
 
-REPEAT OVER $items AS $item
+DISPLAY "Line1" AND PHP_EOL AND "Line2"
 
-DISPLAY $item
-END REPEAT
 
-RETURN "Program Finished"
