@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>APH Playground</title>
+    <meta charset="UTF-8">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        textarea {
+            width: 100%;
+            height: 250px;
+            font-family: monospace;
+            font-size: 14px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            outline: none;
+            resize: vertical;
+        }
+
+        select, button {
+            padding: 6px 12px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .output {
+            width: 100%;
+            min-height: 150px;
+            background: #f4f4f4;
+            border: 1px solid #ccc;
+            padding: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .label {
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>APH / PHP Playground</h2>
+
+<label>Select Language:</label>
+<select id="lang">
+    <option value="aph">APH</option>
+    <option value="php">PHP</option>
+</select>
+
+<textarea id="code" placeholder="Type APH or PHP code here..."></textarea>
+
+<br>
+<button onclick="runCode()">Run Code</button>
+
+<div class="label">Generated PHP Output</div>
+<div class="output" id="phpOut">Waiting...</div>
+
+<div class="label">Generated APH Output (.IMAM)</div>
+<div class="output" id="aphOut">Waiting...</div>
+
+<script>
+function runCode() {
+    const code = document.getElementById("code").value;
+    const lang = document.getElementById("lang").value;
+
+    const formData = new URLSearchParams();
+    formData.append("code", code);
+    formData.append("lang", lang);
+
+    fetch("run.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData.toString()
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById("phpOut").textContent = data.php;
+        document.getElementById("aphOut").textContent = data.aph;
+    })
+    .catch(err => {
+        document.getElementById("phpOut").textContent = "Error running code.";
+        document.getElementById("aphOut").textContent = err;
+    });
+}
+</script>
+
+</body>
+</html>

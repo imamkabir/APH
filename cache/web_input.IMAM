@@ -1,0 +1,42 @@
+DISPLAY "Starting program..."
+
+SET name TO "Imam"
+
+SET age TO 16
+
+IF age > 10 && age < 20 THEN
+
+DISPLAY "Teenager"
+ELSE
+
+DISPLAY "Not a teen"
+END IF
+
+REPEAT 3 TIMES
+
+DISPLAY "Looping APH block!"
+END REPEAT
+
+REPEAT 5 TIMES
+
+DISPLAY "PHP Loop: " . $i
+END REPEAT
+
+FUNCTION greet(x)
+
+DISPLAY "Hello, " . $x
+
+IF x == "Imam" THEN
+
+    DISPLAY "You are the creator of APH!"
+END IF
+END FUNCTION
+
+SET items TO ["apple", "banana", "pear"]
+
+REPEAT OVER $items AS $item
+
+DISPLAY $item
+END REPEAT
+
+RETURN "Program Finished"
