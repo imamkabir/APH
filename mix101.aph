@@ -1,0 +1,25 @@
+COMMENT Testing APH + PHP mixed mode
+
+DISPLAY "Starting MIX test..."
+
+SET name TO "Imam"
+DISPLAY "APH Name: " AND name
+
+PHP:
+echo "\nInside RAW PHP block\n";
+$phpAge = 25;
+echo "PHP age is: $phpAge\n";
+END PHP
+
+DISPLAY "Back to APH. Adding APH values and PHP values:"
+DISPLAY name AND " is " AND $phpAge AND " years old"
+
+PHP:
+function hello_php() {
+    return "Hello from normal PHP function!";
+}
+END PHP
+
+DISPLAY hello_php()
+
+DISPLAY "Ending MIX test."

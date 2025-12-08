@@ -1,0 +1,43 @@
+#!/usr/bin/env php
+<?php
+
+// Absolute paths (important for running APH from anywhere)
+$ROOT = realpath(__DIR__ . "/..");
+
+require_once $ROOT . "/src/Compiler.php";
+
+$compiler = new APH_Compiler();
+
+// Check arguments
+if ($argc < 2) {
+    echo "Usage: aph file.aph\n";
+    exit;
+}
+
+$input = $argv[1];
+
+// Validate file exists
+if (!file_exists($input)) {
+    echo "Error: File not found: $input\n";
+    exit;
+}
+
+// Load APH source code
+$aphCode = file_get_contents($input);
+
+// Compile APH → PHP
+echo "Compiling: $input\n";
+$phpCode = $compiler->compile($aphCode);
+
+// Convert test.aph → test.php
+$base = basename($input, ".aph");
+$outputFile = $ROOT . "/cache/" . $base . ".php";
+
+// Save compiled PHP
+file_put_contents($outputFile, $phpCode);
+
+echo "Output file: $outputFile\n";
+echo "Running...\n\n";
+
+// Execute compiled PHP
+system("php \"$outputFile\"");

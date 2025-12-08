@@ -1,0 +1,9 @@
+DISPLAY "Hello APH"
+
+SET age TO 20
+
+IF age IS GREATER THAN 18 THEN
+    DISPLAY "Adult"
+ELSE
+    DISPLAY "Minor"
+END IF
