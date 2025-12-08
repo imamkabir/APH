@@ -14,7 +14,7 @@ class APH_Compiler {
 
         $lines = explode("\n", $code);
 
-        // FIXED: Runtime.php must load from src/ (NOT cache/)
+        // Load correct Runtime.php
         $php = "<?php\n\nrequire __DIR__ . '/../src/Runtime.php';\n\n";
 
         $inside_php_block = false;
@@ -22,9 +22,14 @@ class APH_Compiler {
         foreach ($lines as $line) {
 
             $trim = trim($line);
-            if ($trim === "") continue;
+            if ($trim === "") {
+                $php .= "\n";
+                continue;
+            }
 
+            // ----------------------------------------------------
             // RAW PHP BLOCK START
+            // ----------------------------------------------------
             if ($trim === "PHP:") {
                 $inside_php_block = true;
                 continue;
@@ -42,13 +47,17 @@ class APH_Compiler {
                 continue;
             }
 
+            // ----------------------------------------------------
             // PHP TAGS
+            // ----------------------------------------------------
             if (str_starts_with($trim, "<?php") || str_starts_with($trim, "?>")) {
                 $php .= "$trim\n";
                 continue;
             }
 
-            // COMMENTS
+            // ----------------------------------------------------
+            // APH COMMENTS
+            // ----------------------------------------------------
             if (str_starts_with($trim, "COMMENT")) {
                 $php .= "// " . substr($trim, 7) . "\n";
                 continue;
@@ -59,25 +68,71 @@ class APH_Compiler {
                 continue;
             }
 
-            // IMPORTANT:
-            // Sort keywords by length so "ELSE IF" matches before "ELSE"
+            // ----------------------------------------------------
+            // PRIORITIZE LONGEST APH KEYWORD MATCH
+            // ----------------------------------------------------
             uksort($this->keywords, function($a, $b) {
                 return strlen($b) - strlen($a);
             });
 
-            // PROCESS APH KEYWORDS
             foreach ($this->keywords as $key => $func) {
+
                 if (str_starts_with($trim, $key)) {
+
                     $rest = trim(substr($trim, strlen($key)));
+
+                    // Convert APH → PHP
                     $php .= $func($rest) . "\n";
                     continue 2;
                 }
             }
 
-            // UNKNOWN LINE — leave a trace for debugging
+            // ----------------------------------------------------
+            // NEW FEATURE:
+            // If line looks like REAL PHP → pass it through
+            // ----------------------------------------------------
+            if ($this->isPHPLine($trim)) {
+                $php .= $line . "\n";
+                continue;
+            }
+
+            // ----------------------------------------------------
+            // Otherwise, log unknown APH line
+            // ----------------------------------------------------
             $php .= "// UNKNOWN APH LINE: $trim\n";
         }
 
         return $php;
+    }
+
+
+
+    // ==========================================================
+    // Detect PHP automatically
+    // ==========================================================
+    private function isPHPLine(string $line): bool {
+
+        // Variable assignment
+        if (preg_match('/^\$\w+\s*=/', $line)) return true;
+
+        // echo statements
+        if (preg_match('/^echo\b/', $line)) return true;
+
+        // if / elseif / else
+        if (preg_match('/^(if|elseif|else\b)/', $line)) return true;
+
+        // for / foreach / while
+        if (preg_match('/^(for|foreach|while)\b/', $line)) return true;
+
+        // function definitions
+        if (preg_match('/^function\b/', $line)) return true;
+
+        // return statements
+        if (preg_match('/^return\b/', $line)) return true;
+
+        // require/include
+        if (preg_match('/^(require|include)/', $line)) return true;
+
+        return false;
     }
 }

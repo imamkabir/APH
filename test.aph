@@ -1,9 +1,18 @@
-DISPLAY "Hello APH"
+DISPLAY "Hello APH!"
 
-SET age TO 20
+$age = 25;
+if ($age > 18) {
+    echo "Adult!";
+} else {
+    echo "Minor!";
+}
 
-IF age IS GREATER THAN 18 THEN
-    DISPLAY "Adult"
-ELSE
-    DISPLAY "Minor"
-END IF
+for ($i = 0; $i < 3; $i++) {
+    echo "Looping";
+}
+
+function greet($name) {
+    echo "Hello, " . $name;
+}
+
+return "Done!";

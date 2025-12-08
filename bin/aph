@@ -1,43 +1,218 @@
-#!/usr/bin/env php
 <?php
 
-// Absolute paths (important for running APH from anywhere)
-$ROOT = realpath(__DIR__ . "/..");
+/**
+ * Reverse Compiler — Beautified Output Version
+ * Converts ANY code (PHP or APH syntax) into CLEAN, PRETTY APH.
+ */
 
-require_once $ROOT . "/src/Compiler.php";
+class APH_ReverseCompiler {
 
-$compiler = new APH_Compiler();
+    private int $indent = 0;
 
-// Check arguments
-if ($argc < 2) {
-    echo "Usage: aph file.aph\n";
-    exit;
+    public function toAPH(string $code): string {
+
+        $lines = explode("\n", $code);
+        $output = [];
+
+        foreach ($lines as $line) {
+
+            $trim = trim($line);
+
+            if ($trim === "") {
+                $output[] = "";
+                continue;
+            }
+
+            // -----------------------------------------
+            // 1️⃣ Already APH syntax → keep it but format
+            // -----------------------------------------
+            if ($this->isAPH($trim)) {
+                $output[] = $this->indentLine($trim);
+                $this->updateIndent($trim);
+                continue;
+            }
+
+            // -----------------------------------------
+            // 2️⃣ PHP variable assignment
+            // -----------------------------------------
+            if (preg_match('/^\$(\w+)\s*=\s*(.+);$/', $trim, $m)) {
+                $var = $m[1];
+                $val = rtrim($m[2], ";");
+                $line = "SET $var TO $val";
+                $output[] = $this->indentLine($line);
+                continue;
+            }
+
+            // -----------------------------------------
+            // 3️⃣ echo → DISPLAY
+            // -----------------------------------------
+            if (preg_match('/^echo\s+(.+);$/', $trim, $m)) {
+                $text = trim($m[1]);
+                $line = "DISPLAY $text";
+                $output[] = $this->indentLine($line);
+                continue;
+            }
+
+            // -----------------------------------------
+            // 4️⃣ if statement
+            // -----------------------------------------
+            if (preg_match('/^if\s*\((.+)\)\s*\{$/', $trim, $m)) {
+                $cond = $this->convertCondition($m[1]);
+                $line = "IF $cond THEN";
+                $output[] = $this->indentLine($line);
+                $this->indent++;
+                continue;
+            }
+
+            // -----------------------------------------
+            // 5️⃣ else if
+            // -----------------------------------------
+            if (preg_match('/^\}\s*elseif\s*\((.+)\)\s*\{$/', $trim, $m)) {
+                $this->indent--; // close previous block
+                $cond = $this->convertCondition($m[1]);
+                $line = "ELSE IF $cond THEN";
+                $output[] = $this->indentLine($line);
+                $this->indent++;
+                continue;
+            }
+
+            // -----------------------------------------
+            // 6️⃣ else
+            // -----------------------------------------
+            if ($trim === "} else {") {
+                $this->indent--;
+                $line = "ELSE";
+                $output[] = $this->indentLine($line);
+                $this->indent++;
+                continue;
+            }
+
+            // -----------------------------------------
+            // 7️⃣ end of IF or loop
+            // -----------------------------------------
+            if ($trim === "}") {
+                $this->indent--;
+                $output[] = $this->indentLine("END IF");
+                continue;
+            }
+
+            // -----------------------------------------
+            // 8️⃣ for loop
+            // -----------------------------------------
+            if (preg_match('/^for\s*\(\s*\$(\w+)\s*=\s*(\d+);\s*\$\1\s*<\s*(\d+);/', $trim, $m)) {
+                $times = intval($m[3]);
+                $line = "REPEAT $times TIMES";
+                $output[] = $this->indentLine($line);
+                $this->indent++;
+                continue;
+            }
+
+            // -----------------------------------------
+            // 9️⃣ end repeat
+            // -----------------------------------------
+            if ($trim === "}") {
+                $this->indent--;
+                $output[] = $this->indentLine("END REPEAT");
+                continue;
+            }
+
+            // -----------------------------------------
+            // 🔟 function
+            // -----------------------------------------
+            if (preg_match('/^function\s+(\w+)\s*\((.*)\)\s*\{$/', $trim, $m)) {
+
+                $name = $m[1];
+                $args = str_replace("$", "", trim($m[2]));
+
+                $line = "FUNCTION $name($args)";
+                $output[] = $this->indentLine($line);
+                $this->indent++;
+                continue;
+            }
+
+            // -----------------------------------------
+            // 1️⃣1️⃣ return statement
+            // -----------------------------------------
+            if (preg_match('/^return\s+(.+);$/', $trim, $m)) {
+                $value = trim($m[1]);
+                $value = str_replace("$", "", $value);
+
+                $line = "RETURN $value";
+                $output[] = $this->indentLine($line);
+                continue;
+            }
+
+            // -----------------------------------------
+            // UNKNOWN → comment
+            // -----------------------------------------
+            $output[] = $this->indentLine("COMMENT UNKNOWN: $trim");
+        }
+
+        return implode("\n", $output);
+    }
+
+    // ====================================================
+    // Check if line already APH syntax
+    // ====================================================
+    private function isAPH($line): bool {
+        $aph = [
+            "DISPLAY", "SET", "IF", "ELSE IF", "ELSE",
+            "END IF", "REPEAT", "END REPEAT",
+            "FUNCTION", "END FUNCTION", "RETURN", "COMMENT"
+        ];
+        foreach ($aph as $k) {
+            if (str_starts_with($line, $k)) return true;
+        }
+        return false;
+    }
+
+    // ====================================================
+    // Format PHP condition into APH condition
+    // ====================================================
+    private function convertCondition($c): string {
+        $c = str_replace("$", "", $c);
+
+        $patterns = [
+            ">=" => " IS GREATER OR EQUAL TO ",
+            "<=" => " IS LESS OR EQUAL TO ",
+            "==" => " IS EQUAL TO ",
+            "!=" => " IS NOT EQUAL TO ",
+            ">"  => " IS GREATER THAN ",
+            "<"  => " IS LESS THAN "
+        ];
+
+        foreach ($patterns as $php => $aph) {
+            $c = str_replace($php, $aph, $c);
+        }
+
+        return trim($c);
+    }
+
+    // ====================================================
+    // Indent APH lines nicely
+    // ====================================================
+    private function indentLine($line): string {
+        return str_repeat("    ", $this->indent) . $line;
+    }
+
+    // ====================================================
+    // Update indent for APH syntax blocks
+    // ====================================================
+    private function updateIndent($line): void {
+        if (str_starts_with($line, "IF") ||
+            str_starts_with($line, "ELSE IF") ||
+            str_starts_with($line, "ELSE") ||
+            str_starts_with($line, "REPEAT") ||
+            str_starts_with($line, "FUNCTION")
+        ) {
+            $this->indent++;
+        }
+
+        if (str_starts_with($line, "END IF") ||
+            str_starts_with($line, "END REPEAT") ||
+            str_starts_with($line, "END FUNCTION")
+        ) {
+            $this->indent--;
+        }
+    }
 }
-
-$input = $argv[1];
-
-// Validate file exists
-if (!file_exists($input)) {
-    echo "Error: File not found: $input\n";
-    exit;
-}
-
-// Load APH source code
-$aphCode = file_get_contents($input);
-
-// Compile APH → PHP
-echo "Compiling: $input\n";
-$phpCode = $compiler->compile($aphCode);
-
-// Convert test.aph → test.php
-$base = basename($input, ".aph");
-$outputFile = $ROOT . "/cache/" . $base . ".php";
-
-// Save compiled PHP
-file_put_contents($outputFile, $phpCode);
-
-echo "Output file: $outputFile\n";
-echo "Running...\n\n";
-
-// Execute compiled PHP
-system("php \"$outputFile\"");

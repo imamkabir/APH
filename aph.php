@@ -1,8 +1,10 @@
 <?php
 
 require_once __DIR__ . "/src/Compiler.php";
+require_once __DIR__ . "/src/ReverseCompiler.php";
 
 $compiler = new APH_Compiler();
+$reverse  = new APH_ReverseCompiler();
 
 $input = $argv[1] ?? null;
 
@@ -18,19 +20,35 @@ if (!file_exists($input)) {
     exit;
 }
 
-// Load APH source code
+// Load APH/PHP/mixed source code
 $aphCode = file_get_contents($input);
 
-// Compile APH -> PHP
+// ----------------------------------------
+// 1️⃣ COMPILE → PHP
+// ----------------------------------------
 $phpCode = $compiler->compile($aphCode);
 
-// OUTPUT FILENAME = same as .aph but in /cache
-$base = basename($input, ".aph");
-$outputFile = __DIR__ . "/cache/" . $base . ".php";
+// Name base (without extension)
+$base = pathinfo($input, PATHINFO_FILENAME);
 
 // Save compiled PHP
-file_put_contents($outputFile, $phpCode);
+$phpFile = __DIR__ . "/cache/" . $base . ".php";
+file_put_contents($phpFile, $phpCode);
 
-// Execute compiled PHP
-echo "Running: $outputFile\n\n";
-system("php $outputFile");
+// ----------------------------------------
+// 2️⃣ REVERSE COMPILE → PURE APH
+// ----------------------------------------
+$imamCode = $reverse->toAPH($aphCode);
+
+$imamFile = __DIR__ . "/cache/" . $base . ".IMAM";
+file_put_contents($imamFile, $imamCode);
+
+// ----------------------------------------
+// RUN THE PHP FILE
+// ----------------------------------------
+echo "Generated Files:\n";
+echo " - PHP OUT:   $phpFile\n";
+echo " - APH OUT:   $imamFile\n\n";
+
+echo "Running PHP Output:\n";
+system("php $phpFile");

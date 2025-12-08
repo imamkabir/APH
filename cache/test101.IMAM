@@ -1,0 +1,33 @@
+COMMENT Basic APH v1 language test
+
+DISPLAY "=== APH TEST START ==="
+
+SET age TO 20
+
+DISPLAY "Age is: " AND age
+
+IF age IS GREATER THAN 18 THEN
+
+DISPLAY "Person is an adult"
+ELSE
+
+DISPLAY "Person is a minor"
+END IF
+
+FUNCTION greet(name)
+
+DISPLAY "Hello, " AND name
+END FUNCTION
+
+COMMENT UNKNOWN: PHP:
+
+DISPLAY "\nFrom RAW PHP: "
+
+DISPLAY aph_version()
+COMMENT UNKNOWN: END PHP
+
+DISPLAY "Calling greet: "
+
+DISPLAY greet("Imam")
+
+DISPLAY "=== APH TEST END ==="
