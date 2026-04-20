@@ -1,211 +1,156 @@
-⭐ APH — English Powered Hypercode
-Programming in real English.
+# APH — Write PHP in Plain English
 
-APH is a human-friendly programming language that compiles English instructions into real PHP code.
-You write in English → APH converts it → PHP runs it.
+APH (English Powered Hypercode) is a natural-language programming tool that lets you write code in plain English and compiles it into executable PHP.
 
-This document explains every APH v1 keyword and what it does.
+It is designed to make programming more accessible, readable, and intuitive — especially for beginners and rapid prototyping.
 
-⭐ 1. DISPLAY
+---
 
-Purpose: Print text, variables, or function calls.
+## ✨ Example
 
-Syntax:
-DISPLAY "Hello"
-DISPLAY name
-DISPLAY "Age: " AND age
-DISPLAY greet("Imam")
+**Input (APH):**
 
-What PHP does:
-echo "Hello";
-echo $name;
-echo "Age: " . $age;
-echo greet("Imam");
+```
+SET name TO "Imam"
+DISPLAY "Hello, " AND name
+```
 
-⭐ 2. SET
+**Output (PHP):**
 
-Purpose: Assign values to variables.
+```php
+$name = "Imam";
+echo "Hello, " . $name;
+```
 
-Syntax:
+---
+
+## 🚀 Features
+
+* Write programs in plain English
+* Automatically compiles to valid PHP
+* Beginner-friendly syntax
+* Supports variables, conditions, loops, and functions
+* Allows raw PHP when needed
+* Designed for learning and experimentation
+
+---
+
+## ⚡ Quick Start
+
+### 1. Clone the repository
+
+```
+git clone https://github.com/imamkabir/APH.git
+cd APH
+```
+
+### 2. Run an APH file
+
+```
+php aph.php test.aph
+```
+
+### 3. Output
+
+APH will translate your `.aph` file into PHP and execute it.
+
+---
+
+## 📚 Basic Syntax
+
+### Variables
+
+```
 SET age TO 20
 SET name TO "Imam"
-SET result TO add(2, 3)
+```
 
-PHP equivalent:
-$age = 20;
-$name = "Imam";
-$result = add(2, 3);
+### Output
 
+```
+DISPLAY "Hello"
+DISPLAY name
+```
 
-Variables in APH automatically become $variables in PHP.
+### Conditions
 
-⭐ 3. IF / ELSE IF / ELSE
-
-Purpose: Conditional logic using English comparisons.
-
-Syntax:
+```
 IF age IS GREATER THAN 18 THEN
     DISPLAY "Adult"
-ELSE IF age IS LESS THAN 18 THEN
-    DISPLAY "Minor"
 ELSE
-    DISPLAY "Unknown"
+    DISPLAY "Minor"
 END IF
+```
 
-Supported comparisons:
-APH English	PHP Operator
-IS GREATER THAN	>
-IS LESS THAN	<
-IS EQUAL TO	==
-IS NOT EQUAL TO	!=
-IS GREATER OR EQUAL TO	>=
-IS LESS OR EQUAL TO	<=
-Logical operators:
-APH	PHP
-AND ALSO	&&
-OR ELSE	||
-PHP output:
-if ($age > 18) {
-    echo "Adult";
-} elseif ($age < 18) {
-    echo "Minor";
-} else {
-    echo "Unknown";
-}
+### Loops
 
-⭐ 4. REPEAT
-
-Purpose: Run a block of code multiple times.
-
-Syntax:
+```
 REPEAT 5 TIMES
     DISPLAY "Hello"
 END REPEAT
+```
 
-PHP:
-for ($i1234 = 0; $i1234 < 5; $i1234++) {
-    echo "Hello";
-}
+### Functions
 
-
-Random loop variable names ($i1234) ensure no conflicts.
-
-⭐ 5. FUNCTION
-
-Purpose: Define reusable code blocks.
-
-Syntax:
+```
 FUNCTION greet(name)
     DISPLAY "Hello, " AND name
 END FUNCTION
+```
 
-PHP:
-function greet($name) {
-    echo "Hello, " . $name;
-}
+---
 
+## 🎯 Use Cases
 
-Functions can take parameters (they become $variables inside PHP).
+* Learning programming fundamentals
+* Teaching coding in a human-readable way
+* Rapid prototyping using natural language
+* Experimenting with alternative programming interfaces
 
-⭐ 6. RETURN
+---
 
-Purpose: Return a value from a function.
+## 🧠 Project Vision
 
-Syntax:
-RETURN name
-RETURN 10
-RETURN add(3, 5)
+APH explores the idea that programming can be written and understood like natural language.
 
-PHP:
-return $name;
-return 10;
-return add(3, 5);
+The goal is to reduce the barrier to entry for coding while maintaining compatibility with real-world systems like PHP.
 
-⭐ 7. IMPORT FILE
+---
 
-Purpose: Load another PHP or APH-generated file.
+## 📦 Project Status
 
-Syntax:
-IMPORT FILE "utils.php"
+Current Version: v1.x
+Status: Active development
 
-PHP:
-require "utils.php";
+Planned features:
 
-⭐ 8. COMMENT
+* Arrays support
+* Advanced loops (WHILE, FOR EACH)
+* Modules and imports
+* Improved parser accuracy
+* Class support (v2)
 
-Purpose: Add notes for developers (not executed).
+---
 
-Syntax:
-COMMENT This is a test
+## 🤝 Contributing
 
-PHP:
-// This is a test
+Contributions are welcome.
 
-⭐ 9. TRUE / FALSE
+You can help by:
 
-Boolean constants.
+* Improving the parser
+* Adding new language features
+* Fixing bugs
+* Writing documentation
 
-Syntax:
-SET isAdult TO TRUE
-SET isHuman TO FALSE
+---
 
-PHP:
-$isAdult = true;
-$isHuman = false;
+## 📄 License
 
-⭐ 10. RAW PHP BLOCK
+MIT License
 
-Purpose: Write normal PHP inside APH.
+---
 
-Syntax:
-PHP:
-echo "Hello from PHP!";
-END PHP
+## 👤 Author
 
-
-Everything between PHP: and END PHP is passed to PHP untouched.
-
-⭐ APH SUMMARY TABLE
-APH Keyword	Meaning	PHP Equivalent
-DISPLAY	Print something	echo
-SET	Assign variable	=
-IF … THEN	Condition	if () {
-ELSE IF … THEN	Condition	} elseif () {
-ELSE	Else	} else {
-END IF	End block	}
-REPEAT N TIMES	Loop	for (…)
-END REPEAT	End loop	}
-FUNCTION name(args)	Define function	function name($arg)
-END FUNCTION	End function	}
-RETURN	Return value	return
-IMPORT FILE	Include file	require
-COMMENT	Comment	//
-TRUE/FALSE	Booleans	true/false
-PHP: … END PHP	Raw PHP block	untouched
-⭐ APH Philosophy
-✔ Readable by humans
-✔ Zero symbols in English layer
-✔ Beginner-friendly
-✔ Converts cleanly to PHP
-✔ Fully interoperable with PHP
-✔ Safe and predictable
-
-APH is designed so that even a child can read your code, but a professional system can run it at full speed.
-
-⭐ What’s Next
-
-APH v1 already works. Coming soon in v1.2+:
-
-Function calls inside DISPLAY (done!)
-
-Array syntax
-
-WHILE loops
-
-FOR EACH loops
-
-Modules (IMPORT MODULE "account")
-
-Classes (APH v2)
-
-Custom macros (CamelCase rules)
+Created by Imam Kabir
